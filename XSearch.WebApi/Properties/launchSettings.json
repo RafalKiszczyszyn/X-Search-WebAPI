@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "XSearch.WebApi": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    }
+  }
+}
