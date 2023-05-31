@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using XSearch.WebApi.Infrastructure.Documentation;
-using XSearch.WebApi.Infrastructure.Startup;
+using XSearch.WebApi.Common.WebInfra.Documentation;
+using XSearch.WebApi.Common.WebInfra.Startup;
 
 var program = new WebApiProgram(args, new WebApiConfiguration(
       apiAssembly: typeof(Program).Assembly,
