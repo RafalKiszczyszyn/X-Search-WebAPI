@@ -7,7 +7,7 @@ namespace XSearch.WebApi.DTOs
   /// Representation of a query matching fields to a value. 
   /// </summary>
   [JsonSchema("MatchQuery")]
-  public class MatchQueryDto
+  public class MatchQuerySpecificationDto
   {
     /// <summary>
     /// Document fields in order of relevance.

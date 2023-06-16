@@ -13,12 +13,24 @@ namespace XSearch.WebApi.DTOs
     /// Query specification.
     /// </summary>
     [JsonProperty("query", Required = Required.Always)]
-    public QueryDto Query { get; set; }
+    public QuerySpecificationDto Query { get; set; }
 
     /// <summary>
-    /// Order documents by fields.
+    /// Sort documents by fields.
     /// </summary>
     [JsonProperty("orderBy", Required = Required.Default)]
-    public List<string>? OrderBy { get; set; }
+    public List<SortFieldSpecificationDto>? SortBy { get; set; }
+
+    /// <summary>
+    /// Index of a page (0-based).
+    /// </summary>
+    [JsonProperty("orderBy", Required = Required.Default)]
+    public int PageIndex { get; set; } = 0;
+
+    /// <summary>
+    /// Number of documents on page (default: 10, max: 10,000).
+    /// </summary>
+    [JsonProperty("orderBy", Required = Required.Default)]
+    public int PageSize { get; set; } = 10;
   }
 }

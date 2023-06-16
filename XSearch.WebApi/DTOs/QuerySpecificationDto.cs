@@ -7,36 +7,36 @@ namespace XSearch.WebApi.DTOs
   /// Representation of a query.
   /// </summary>
   [JsonSchema("Query")]
-  public class QueryDto
+  public class QuerySpecificationDto
   {
     /// <summary>
     /// Document fields must match provided value. 
     /// </summary>
     [JsonProperty("match", Required = Required.Default)]
-    public MatchQueryDto? Match { get; set; }
+    public MatchQuerySpecificationDto? Match { get; set; }
 
     /// <summary>
     /// Document field must be in provided range. 
     /// </summary>
     [JsonProperty("range", Required = Required.Default)]
-    public RangeQueryDto? Range { get; set; }
+    public RangeQuerySpecificationDto? Range { get; set; }
 
     /// <summary>
     /// Document must satisfy all conditions. 
     /// </summary>
     [JsonProperty("must", Required = Required.Default)]
-    public List<QueryDto>? Must { get; set; }
+    public List<QuerySpecificationDto>? Must { get; set; }
 
     /// <summary>
     /// Document must satisfy at least one condition.. 
     /// </summary>
     [JsonProperty("must", Required = Required.Default)]
-    public List<QueryDto>? Should { get; set; }
+    public List<QuerySpecificationDto>? Should { get; set; }
 
     /// <summary>
     /// Matching documents may be limited by filter query which does not affect the ranking. 
     /// </summary>
     [JsonProperty("filter", Required = Required.Default)]
-    public QueryDto? Filter { get; set; }
+    public QuerySpecificationDto? Filter { get; set; }
   }
 }

@@ -28,6 +28,7 @@ namespace XSearch.WebApi.Common.WebInfra.Startup
             .AllowAnyMethod()
             .AllowAnyHeader())
           .UseRouting()
+          .UseAuthorization()
           .UseEndpoints(endpoints => endpoints.MapControllers())
       });
 

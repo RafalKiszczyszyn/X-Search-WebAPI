@@ -2,7 +2,13 @@
 using NSwag.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authorization;
+using XSearch.WebApi.Common.Security;
 using XSearch.WebApi.Common.WebInfra.ErrorHandling;
+using XSearch.WebApi.Domain;
 using XSearch.WebApi.DTOs;
 
 namespace XSearch.WebApi.Controllers
@@ -15,49 +21,111 @@ namespace XSearch.WebApi.Controllers
   [SwaggerResponse(HttpStatusCode.OK, typeof(QueryResultDto), Description = "Successful search")]
   [SwaggerResponse(HttpStatusCode.BadRequest, typeof(ErrorResponseDto), Description = "Bad request")]
   [SwaggerResponse(HttpStatusCode.InternalServerError, typeof(ErrorResponseDto), Description = "Internal server error")]
+  [SwaggerResponse(HttpStatusCode.Unauthorized, null, Description = "Unauthorized")]
   public class SearchController : ControllerBase
   {
-    private static readonly string LoremIpsum =
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sit amet sapien a ipsum sollicitudin malesuada vel non nunc. Aliquam quis justo vel est dictum pellentesque. Mauris tempor tellus at suscipit tincidunt. Sed commodo eros mauris, eget varius orci pulvinar tincidunt. Vivamus nec ullamcorper lorem. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Duis pellentesque vitae dolor ac bibendum. Nam ligula diam, bibendum sollicitudin ligula quis, volutpat dignissim est. Nulla dignissim sem libero, sit amet varius massa varius in.\r\n\r\nSed vel tempor neque. Cras posuere imperdiet rutrum. Fusce vel eleifend arcu. Phasellus egestas in magna sed sodales. Proin at magna ac purus ultricies convallis. Mauris at finibus est. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Aliquam non diam nec lectus tincidunt bibendum ut id elit. Praesent placerat metus est, in vehicula nibh interdum vitae.\r\n\r\nSed blandit lectus lectus, eu dignissim libero porttitor tempus. Sed vulputate orci eget libero tristique bibendum. Etiam ut lacus eleifend, gravida nisl vel, rutrum sapien. Praesent non ultrices nunc, ut aliquam purus. Sed est ipsum, luctus quis velit nec, scelerisque egestas augue. Praesent consectetur urna risus, eu tristique est rutrum a. Aenean id mattis eros, eget ornare felis. Cras auctor finibus libero. Nam ut vestibulum nibh. Duis feugiat nunc et facilisis pulvinar. Fusce dictum pulvinar augue a sodales. Proin euismod dui nec mattis tincidunt. Aenean quis turpis sodales, tristique est nec, commodo felis. Quisque posuere viverra ornare. Morbi volutpat sapien vitae enim lacinia, in pretium felis bibendum.\r\n\r\nSed sed pellentesque turpis. Quisque porttitor consectetur volutpat. Sed libero leo, suscipit et ipsum luctus, ultricies finibus ex. Aenean ut bibendum augue. Phasellus cursus volutpat eros nec malesuada. Proin mollis sed ligula nec pharetra. Proin ornare ultrices nulla, ut condimentum diam vestibulum id.\r\n\r\nPellentesque non consectetur lectus. Fusce facilisis elementum odio, at maximus augue suscipit ac. Etiam eu est urna. Vivamus at turpis metus. Ut ut orci a tellus efficitur posuere eleifend sit amet nunc. Nullam quis accumsan dolor. Duis lorem nunc, scelerisque quis commodo id, fermentum eget dui. In venenatis tellus nec erat tempor cursus. Donec sit amet ligula suscipit, blandit est quis, pretium diam. Praesent nec tincidunt odio. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque congue est in lacus blandit luctus. Sed ornare libero ultricies nunc tincidunt feugiat. Fusce malesuada magna ut nisl venenatis scelerisque. Nullam ipsum enim, pretium id lacus non, pretium accumsan est. Vivamus ut purus pulvinar, porttitor elit sed, lobortis lorem.";
-
-    private static readonly List<ArticleDto> _articles = new()
+    private readonly ISearchEngine _engine;
+    private readonly ICredentialsProvider _credentialsProvider;
+    
+    public SearchController(
+      ISearchEngine engine,
+      ICredentialsProvider provider)
     {
-      new ArticleDto
-      {
-        Id = 1,
-        Keywords = new List<string> {"Education", "Education in Canada"},
-        Content = LoremIpsum,
-        RevisionDate = DateTime.Now,
-        Title = "Education in Canada"
-      },
-      new ArticleDto
-      {
-        Id = 2,
-        Keywords = new List<string> {"Education", "Education in Poland"},
-        Content = LoremIpsum,
-        RevisionDate = DateTime.Now,
-        Title = "Education in Poland"
-      },
-      new ArticleDto
-      {
-        Id = 3,
-        Keywords = new List<string> {"Education", "Education in India"},
-        Content = LoremIpsum,
-        RevisionDate = DateTime.Now,
-        Title = "Education in India"
-      }
-    };
-
-    private static readonly Random _rand = new();
+      _engine = engine;
+      _credentialsProvider = provider;
+    }
 
     /// <summary>Advanced Search</summary>
+    /// <remarks>Requires basic authentication header with credentials used by search engine.</remarks>>
     [HttpPost("/search")]
-    public ActionResult<QueryResultDto> AdvancedSearch([FromBody] QueryRequestDto queryRequestDto)
+    [Authorize(AuthenticationSchemes = "Basic")]
+    public async Task<ActionResult<QueryResultDto>> AdvancedSearchAsync([FromBody] QueryRequestDto queryRequestDto)
     {
+      var res = await _engine.SearchAsync(ParseRequest(queryRequestDto), _credentialsProvider);
+
       return new QueryResultDto
       {
-        matches = _articles.OrderBy(_ => _rand.Next()).ToList()
+        matches = res.Select(x => new ArticleDto
+        {
+          Id = x.Id,
+          Title = x.Title,
+          RevisionDate = x.RevisionDate,
+          Content = x.Content,
+          Keywords = x.Keywords
+        }).ToList(),
       };
+    }
+
+    private static SearchQuery ParseRequest(QueryRequestDto requestDto)
+    {
+      return new SearchQuery(
+        ParseQuerySpecification(requestDto.Query), 
+        requestDto.PageIndex, requestDto.PageSize, requestDto.SortBy?.Select(x => new SortField(x.Field, x.Order)));
+    }
+
+    private static IQuerySpecification ParseQuerySpecification(QuerySpecificationDto specDto)
+    {
+      var specs = new List<IQuerySpecification>();
+      
+      if (specDto.Must != null)
+      {
+        specs.Add(new MustQuerySpecification(
+          specDto.Must.Select(ParseQuerySpecification),
+          specDto.Filter != null ? ParseQuerySpecification(specDto.Filter) : null));
+      }
+
+      if (specDto.Should != null)
+      {
+        specs.Add(new ShouldQuerySpecification(
+          specDto.Should.Select(ParseQuerySpecification),
+          specDto.Filter != null ? ParseQuerySpecification(specDto.Filter) : null));
+      }
+
+      if (specDto.Match != null)
+      {
+        specs.Add(new MatchQuerySpecification(
+          specDto.Match.Fields, specDto.Match.Value,
+          specDto.Filter != null ? ParseQuerySpecification(specDto.Filter) : null));
+      }
+
+      if (specDto.Range != null)
+      {
+        try
+        {
+          var gte = specDto.Range.Gte != null ? ParseValueAs<double>(specDto.Range.Gte) : (double?) null;
+          var lte = specDto.Range.Lte != null ? ParseValueAs<double>(specDto.Range.Lte) : (double?) null;
+          specs.Add(new NumberRangeQuerySpecification(
+            specDto.Range.Field, gte, lte,
+            specDto.Filter != null ? ParseQuerySpecification(specDto.Filter) : null));
+        }
+        catch (Exception)
+        {
+          try
+          {
+            var gte = specDto.Range.Gte != null ? ParseValueAs<DateTime>(specDto.Range.Gte) : (DateTime?)null;
+            var lte = specDto.Range.Lte != null ? ParseValueAs<DateTime>(specDto.Range.Lte) : (DateTime?)null;
+            specs.Add(new DateRangeQuerySpecification(
+              specDto.Range.Field, gte, lte,
+              specDto.Filter != null ? ParseQuerySpecification(specDto.Filter) : null));
+          }
+          catch (Exception)
+          {
+            throw new Exception("Invalid range query specification");
+          }
+        }
+      }
+
+      return specs.Count == 1 ? specs.Single() : new MustQuerySpecification(specs);
+    }
+
+    private static T ParseValueAs<T>(string value)
+    {
+      var x = JsonSerializer.Deserialize<JsonValue>($"\"{value.Replace("\"", "\\\"")}\"", new JsonSerializerOptions
+      {
+        NumberHandling = JsonNumberHandling.AllowReadingFromString
+      });
+
+      return x.GetValue<T>();
     }
   }
 }

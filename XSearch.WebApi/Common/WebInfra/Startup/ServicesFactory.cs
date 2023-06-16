@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
 using NSwag.AspNetCore;
 using NSwag.Generation;
+using XSearch.WebApi.Common.Security;
 using XSearch.WebApi.Common.WebInfra.Documentation;
 using XSearch.WebApi.Common.WebInfra.Documentation.Implementation.Export;
 using XSearch.WebApi.Common.WebInfra.Documentation.Implementation.Export.Generation;
@@ -25,7 +26,8 @@ namespace XSearch.WebApi.Common.WebInfra.Startup
         .AddSingleton(openApiInfo)
         .ConfigureCookiePolicy()
         .ConfigureDocumentation(openApiInfo)
-        .ConfigureErrorHandling();
+        .ConfigureErrorHandling()
+        .ConfigureBasicAuthentication();
     }
 
     private static IServiceCollection ConfigureMvc(

@@ -1,7 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using XSearch.WebApi.Common.WebInfra.Documentation;
 using XSearch.WebApi.Common.WebInfra.Startup;
+using XSearch.WebApi.Domain;
+using XSearch.WebApi.Implementations;
 
 var program = new WebApiProgram(args, new WebApiConfiguration(
       apiAssembly: typeof(Program).Assembly,
@@ -14,7 +18,13 @@ var program = new WebApiProgram(args, new WebApiConfiguration(
         tagsOrder: new List<string>
         {
           "Search Articles"
-        }));
+        })
+      .UseCustomServices(services => services
+          .AddSingleton<ISearchEngine>(x =>
+          {
+            var config = x.GetService<IConfiguration>()!;
+            return new ElasticSearch(config["SearchEngineBaseUrl"], config["SearchEngineIndex"]);
+          })));
 
 if (program.IsDocumentationExportRequested)
 {
