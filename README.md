@@ -1,5 +1,5 @@
 ### Search Engine configuration
-Connection to the underlying search engine can be configured in `./XSearch.WebApi/appsettings.json`. Default values are:
+XSearch.WebAPI is compatible with the [x-search-elasticsearch:8.8.1](https://hub.docker.com/r/rafalkiszczyszyn/x-search-elasticsearch) search engine image. Connection to the underlying search engine can be configured in `./XSearch.WebApi/appsettings.json`. Default values are:
 ```
 {
   "SearchEngineBaseUrl": "https://elasticsearch:9200/wikipedia/_search",
@@ -22,7 +22,7 @@ Search for the phrase "Eduaction" in the title and content:
 ```
 {
   "query": {
-    "match": {"fields": ["Title", "Content"], "value": "Education"}
+    "match": {"fields": ["title", "content"], "value": "Education"}
   }
 },
 ```
@@ -32,8 +32,8 @@ Search for documents revised after 2022 or having word "rat" in the title:
 {
   "query": {
       "should": [
-          {"match": {"fields": ["Title"], "value": "rat"}},
-          {"range": {"field": "RevisionDate", "gte": "2022-01-01T00:00:00Z"}}
+          {"match": {"fields": ["title"], "value": "rat"}},
+          {"range": {"field": "revisionDate", "gte": "2022-01-01T00:00:00Z"}}
       ]
   }
 }
