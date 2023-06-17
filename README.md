@@ -2,11 +2,11 @@
 Connection to the underlying search engine can be configured in `./XSearch.WebApi/appsettings.json`. Default values are:
 ```
 {
-  "SearchEngineBaseUrl": "https://localhost:9200/wikipedia/_search",
+  "SearchEngineBaseUrl": "https://elasticsearch:9200/wikipedia/_search",
   "SearchEngineIndex": "wikipedia"
 }
 ```
-If run in container, localhost must be replaced by accessible address.
+__Notice__ `elasticsearch`  host should point to the machine running ElasticSearch.
 
 ### Run in container
 ```

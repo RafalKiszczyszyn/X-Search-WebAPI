@@ -45,7 +45,7 @@ namespace XSearch.WebApi.Controllers
 
       return new QueryResultDto
       {
-        matches = res.Select(x => new ArticleDto
+        Matches = res.Matches.Select(x => new ArticleDto
         {
           Id = x.Id,
           Title = x.Title,
@@ -53,6 +53,8 @@ namespace XSearch.WebApi.Controllers
           Content = x.Content,
           Keywords = x.Keywords
         }).ToList(),
+        TotalHits = res.TotalHits,
+        SearchTime = res.SearchTime
       };
     }
 

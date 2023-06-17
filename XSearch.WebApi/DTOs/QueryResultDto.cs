@@ -15,9 +15,21 @@ namespace XSearch.WebApi.DTOs
   public class QueryResultDto
   {
     /// <summary>
-    /// List of articles produces by a query.
+    /// Articles matching the query.
     /// </summary>
-    [JsonProperty("matchingArticles", Required = Required.Default)]
-    public List<ArticleDto> matches { get; set; }
+    [JsonProperty("matches", Required = Required.Always)]
+    public List<ArticleDto> Matches { get; set; }
+
+    /// <summary>
+    /// Search time in millis.
+    /// </summary>
+    [JsonProperty("searchTime", Required = Required.Always)]
+    public long SearchTime { get; set; }
+
+    /// <summary>
+    /// Number of all articles matching the query.
+    /// </summary>
+    [JsonProperty("matchingArticles", Required = Required.Always)]
+    public long TotalHits { get; set; }
   }
 }

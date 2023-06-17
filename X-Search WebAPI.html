@@ -135,13 +135,28 @@
         "type": "object",
         "description": "Representation of a query result.",
         "additionalProperties": false,
+        "required": [
+          "matches",
+          "searchTime",
+          "totalHits"
+        ],
         "properties": {
           "matches": {
             "type": "array",
-            "description": "List of articles produces by a query.",
+            "description": "Articles matching the query.",
             "items": {
               "$ref": "#/components/schemas/Article"
             }
+          },
+          "searchTime": {
+            "type": "integer",
+            "description": "Search time in millis.",
+            "format": "int64"
+          },
+          "totalHits": {
+            "type": "integer",
+            "description": "Number of all articles matching the query.",
+            "format": "int64"
           }
         }
       },

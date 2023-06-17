@@ -22,7 +22,7 @@ namespace XSearch.WebApi.Implementations
       _index = index;
     }
 
-    public async Task<List<Article>> SearchAsync(SearchQuery query, ICredentialsProvider credentialsProvider)
+    public async Task<SearchQueryResult> SearchAsync(SearchQuery query, ICredentialsProvider credentialsProvider)
     {
       var client = new ElasticsearchClient(new ElasticsearchClientSettings(new Uri(_baseUrl))
         .Authentication(new BasicAuthentication(credentialsProvider.Username!, credentialsProvider.Password!))
@@ -31,7 +31,7 @@ namespace XSearch.WebApi.Implementations
         .ServerCertificateValidationCallback(CertificateValidations.AllowAll)
         .RequestTimeout(TimeSpan.FromMinutes(2)));
       
-      var res = await client.SearchAsync<dynamic>(s =>
+      var res = await client.SearchAsync<ArticleDoc>(s =>
       {
         s.Query(q => SetupQuery(q, query.Spec))
           .From(query.PageIndex * query.PageSize)
@@ -52,11 +52,13 @@ namespace XSearch.WebApi.Implementations
       if (!res.IsValidResponse)
         throw new InvalidOperationException(res.DebugInformation);
 
-      return res.Hits.Select(x => ((JsonElement)x.Source!).Deserialize<ArticleDoc>()!)
+      var matches = res.Hits
         .Select(x => new Article(
-          long.Parse(x.Id), x.Title, 
-          x.DateModified, x.Categories, 
-          x.Content)).ToList();
+          long.Parse(x.Id), x.Source!.Title,
+          x.Source.DateModified, x.Source.Categories,
+          x.Source.Content)).ToList();
+
+      return new SearchQueryResult(matches, res.Took, res.Total);
     }
 
     private static void SetupQuery<T>(
@@ -168,8 +170,8 @@ namespace XSearch.WebApi.Implementations
     {
       return field switch
       {
-        "Keywords" => "Categories",
-        "RevisionDate" => "DateModified",
+        "keywords" => "categories",
+        "revisionDate" => "dateModified",
         _ => field
       };
     }

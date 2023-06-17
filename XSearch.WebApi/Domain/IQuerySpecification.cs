@@ -42,6 +42,20 @@ namespace XSearch.WebApi.Domain
     }
   }
 
+  public class SearchQueryResult
+  {
+    public ImmutableList<Article> Matches { get; }
+    public long SearchTime { get; }
+    public long TotalHits { get; }
+
+    public SearchQueryResult(IEnumerable<Article> matches, long searchTime, long totalHits)
+    {
+      Matches = matches.ToImmutableList();
+      SearchTime = searchTime;
+      TotalHits = totalHits;
+    }
+  }
+
   internal class MustQuerySpecification : IQuerySpecification
   {
     public ImmutableList<IQuerySpecification> SubQueries { get; }

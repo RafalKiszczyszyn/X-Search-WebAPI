@@ -5,6 +5,6 @@ namespace XSearch.WebApi.Domain
 {
   public interface ISearchEngine
   { 
-    Task<List<Article>> SearchAsync(SearchQuery query, ICredentialsProvider credentialsProvider);
+    Task<SearchQueryResult> SearchAsync(SearchQuery query, ICredentialsProvider credentialsProvider);
   }
 }
