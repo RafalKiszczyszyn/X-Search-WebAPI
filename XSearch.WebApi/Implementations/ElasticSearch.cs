@@ -132,7 +132,7 @@ namespace XSearch.WebApi.Implementations
               if (spec.GreaterThanEqual != null)
                 nr.Gte(spec.GreaterThanEqual);
               if (spec.LessThanEqual != null)
-                nr.Gte(spec.LessThanEqual);
+                nr.Lte(spec.LessThanEqual);
             })));
 
             if (spec.Filter != null)
@@ -152,7 +152,7 @@ namespace XSearch.WebApi.Implementations
               if (spec.GreaterThanEqual != null)
                 dt.Gte(spec.GreaterThanEqual);
               if (spec.LessThanEqual != null)
-                dt.Gte(spec.LessThanEqual);
+                dt.Lte(spec.LessThanEqual);
             })));
 
             if (spec.Filter != null)
